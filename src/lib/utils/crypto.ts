@@ -19,12 +19,17 @@
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-cbc';
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY!;
 
-if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 64) {
-  throw new Error(
-    'ENCRYPTION_KEY must be a 64-character hex string (32 bytes). Generate with: openssl rand -hex 32'
-  );
+function getEncryptionKey(): string {
+  const key = process.env.ENCRYPTION_KEY;
+
+  if (!key || key.length !== 64) {
+    throw new Error(
+      'ENCRYPTION_KEY must be a 64-character hex string (32 bytes). Generate with: openssl rand -hex 32'
+    );
+  }
+
+  return key;
 }
 
 /**
@@ -34,10 +39,11 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 64) {
  * @returns Texto criptografado no formato: iv:encryptedData
  */
 export function encrypt(text: string): string {
+  const encryptionKey = getEncryptionKey();
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(
     ALGORITHM,
-    Buffer.from(ENCRYPTION_KEY, 'hex'),
+    Buffer.from(encryptionKey, 'hex'),
     iv
   );
 
@@ -54,6 +60,7 @@ export function encrypt(text: string): string {
  * @returns Texto original descriptografado
  */
 export function decrypt(encryptedText: string): string {
+  const encryptionKey = getEncryptionKey();
   const [ivHex, encryptedData] = encryptedText.split(':');
 
   if (!ivHex || !encryptedData) {
@@ -63,7 +70,7 @@ export function decrypt(encryptedText: string): string {
   const iv = Buffer.from(ivHex, 'hex');
   const decipher = crypto.createDecipheriv(
     ALGORITHM,
-    Buffer.from(ENCRYPTION_KEY, 'hex'),
+    Buffer.from(encryptionKey, 'hex'),
     iv
   );
 
