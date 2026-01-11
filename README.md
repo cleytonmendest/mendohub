@@ -66,7 +66,10 @@ Acesse: http://localhost:3000
 ## 📚 Documentação
 
 - [📖 Setup Completo](./docs/SETUP.md) - Guia detalhado de instalação
+- [🔧 Environment Setup](./docs/ENV_SETUP.md) - Configuração de variáveis de ambiente
 - [🏗️ Arquitetura](./docs/ARCHITECTURE.md) - Decisões técnicas e estrutura
+- [🗄️ Database Schema](./docs/DATABASE.md) - Esquema completo do banco de dados
+- [👑 Platform Admin Setup](./docs/PLATFORM_ADMIN_SETUP.md) - Como configurar admins da plataforma
 - [🗺️ Roadmap](./docs/ROADMAP.md) - Planos e fases de desenvolvimento
 - [💰 Planos e Preços](./docs/PRICING.md) - Estratégia de monetização
 
