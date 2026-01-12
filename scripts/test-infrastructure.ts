@@ -15,9 +15,7 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-import { createClient } from '../src/lib/db/supabase/server.js';
 import { createAdminClient } from '../src/lib/db/supabase/admin.js';
-import { getOrganizationRepository } from '../src/lib/db/repositories/index.js';
 import { encrypt, decrypt, logger } from '../src/lib/utils/index.js';
 
 async function testInfrastructure() {

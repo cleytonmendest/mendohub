@@ -100,6 +100,7 @@ export class SupabaseOrganizationRepository implements OrganizationRepository {
 
     const { data, error } = await supabase
       .from('organizations')
+      // @ts-expect-error - Supabase generated types issue with strict mode
       .update(input)
       .eq('id', id)
       .select()
@@ -117,6 +118,7 @@ export class SupabaseOrganizationRepository implements OrganizationRepository {
 
     const { error } = await supabase
       .from('organizations')
+      // @ts-expect-error - Supabase generated types issue with strict mode
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id);
 

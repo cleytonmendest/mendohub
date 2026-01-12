@@ -1,25 +1,49 @@
-export default function HomePage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="text-center space-y-6 p-8">
-        <h1 className="text-6xl font-bold text-gray-900">
-          MendoHub
-        </h1>
-        <p className="text-xl text-gray-600 max-w-2xl">
-          WhatsApp Business automation SaaS platform with integrated AI
-        </p>
-        <div className="flex gap-4 justify-center pt-4">
-          <div className="px-4 py-2 bg-green-100 text-green-800 rounded-lg font-medium">
-            ✓ Estrutura corrigida
-          </div>
-          <div className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-medium">
-            Next.js 16.1.1
-          </div>
-          <div className="px-4 py-2 bg-purple-100 text-purple-800 rounded-lg font-medium">
-            MVP Phase 1
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+/**
+ * Home Page
+ *
+ * Redireciona para o dashboard apropriado baseado no tipo de usuário.
+ * - Platform Admin → /admin/dashboard
+ * - Organization User → /[org]/dashboard
+ * - Não autenticado → /login
+ */
+
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth';
+import { createAdminClient } from '@/lib/db/supabase/admin';
+
+export default async function HomePage() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  const adminClient = createAdminClient();
+
+  // Verificar se é platform admin
+  const { data: platformAdmin } = await adminClient
+    .from('platform_admins')
+    .select('id')
+    .eq('id', user.id)
+    .eq('is_active', true)
+    .single();
+
+  if (platformAdmin) {
+    redirect('/admin/dashboard');
+  }
+
+  // Pegar organização do usuário
+  const { data: userData } = await adminClient
+    .from('users')
+    .select('organization:organizations(slug)')
+    .eq('id', user.id)
+    .single();
+
+  if (userData?.organization) {
+    const orgSlug = (userData.organization as { slug: string }).slug;
+    redirect(`/${orgSlug}/dashboard`);
+  }
+
+  // Se não encontrou nem admin nem organização, unauthorized
+  redirect('/unauthorized');
 }
