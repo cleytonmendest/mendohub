@@ -13,7 +13,7 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 import { createAdminClient } from '../src/lib/db/supabase/admin.js';
-import { logger } from '../src/lib/utils/index.js';
+import { logger } from '../src/lib/utils/logger.js';
 import * as readline from 'readline';
 
 const rl = readline.createInterface({

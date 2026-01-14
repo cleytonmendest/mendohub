@@ -2,11 +2,11 @@
  * Admin Dashboard Page
  *
  * Dashboard principal para Platform Admins.
- * Protegido por requirePlatformAdmin (redirect se não for admin).
+ * Protegido pelo layout admin (requirePlatformAdmin).
  */
 
-import { requirePlatformAdmin } from '@/lib/auth';
-import { logout } from '@/app/(auth)/login/actions';
+import { requirePlatformAdmin } from '@/lib/auth/guards';
+import { Users, Building2, CreditCard, TrendingUp } from 'lucide-react';
 
 export const metadata = {
   title: 'Admin Dashboard - MendoHub',
@@ -14,58 +14,121 @@ export const metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  const { user, admin } = await requirePlatformAdmin();
+  const { admin } = await requirePlatformAdmin();
+
+  // TODO: Buscar dados reais do banco
+  const stats = [
+    {
+      name: 'Total de Clientes',
+      value: '0',
+      icon: Building2,
+      change: '+0%',
+      changeType: 'positive',
+    },
+    {
+      name: 'Usuários Ativos',
+      value: '0',
+      icon: Users,
+      change: '+0%',
+      changeType: 'positive',
+    },
+    {
+      name: 'MRR',
+      value: 'R$ 0',
+      icon: CreditCard,
+      change: '+0%',
+      changeType: 'positive',
+    },
+    {
+      name: 'Conversas (mês)',
+      value: '0',
+      icon: TrendingUp,
+      change: '+0%',
+      changeType: 'positive',
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Admin Dashboard
-          </h1>
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Bem-vindo, {admin.full_name}!
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Aqui está uma visão geral da plataforma
+        </p>
+      </div>
 
-          <div className="mt-6 space-y-4">
-            <div className="rounded-lg bg-blue-50 p-4">
-              <h2 className="text-lg font-semibold text-blue-900">
-                Bem-vindo, {admin.full_name}!
-              </h2>
-              <p className="mt-1 text-sm text-blue-700">
-                Email: {admin.email}
-              </p>
-              <p className="mt-1 text-sm text-blue-700">
-                Role: {admin.role}
-              </p>
-              <p className="mt-1 text-sm text-blue-700">
-                User ID: {user.id}
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-gray-200 p-4">
-              <h3 className="font-semibold text-gray-900">
-                Status da Autenticação
-              </h3>
-              <p className="mt-2 text-sm text-green-600">
-                ✅ Autenticado como Platform Admin
-              </p>
-              <p className="mt-1 text-sm text-green-600">
-                ✅ Middleware funcionando corretamente
-              </p>
-              <p className="mt-1 text-sm text-green-600">
-                ✅ RLS policies aplicadas
-              </p>
-            </div>
-
-            <div className="mt-6">
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+      {/* Stats Grid */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.name}
+              className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
+                  <Icon className="h-6 w-6 text-blue-600" />
+                </div>
+                <span
+                  className={`text-sm font-medium ${
+                    stat.changeType === 'positive'
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                  }`}
                 >
-                  Fazer Logout
-                </button>
-              </form>
+                  {stat.change}
+                </span>
+              </div>
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-600">
+                  {stat.name}
+                </p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">
+                  {stat.value}
+                </p>
+              </div>
             </div>
-          </div>
+          );
+        })}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Ações Rápidas
+        </h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <a
+            href="/admin/clients/new"
+            className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+          >
+            <Building2 className="h-5 w-5 text-blue-600" />
+            <span className="text-sm font-medium text-gray-900">
+              Criar Cliente
+            </span>
+          </a>
+          <a
+            href="/admin/clients"
+            className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+          >
+            <Users className="h-5 w-5 text-blue-600" />
+            <span className="text-sm font-medium text-gray-900">
+              Ver Clientes
+            </span>
+          </a>
+          <a
+            href="/admin/logs"
+            className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+          >
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <span className="text-sm font-medium text-gray-900">
+              Ver Logs
+            </span>
+          </a>
         </div>
       </div>
     </div>

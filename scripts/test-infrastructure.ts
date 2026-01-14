@@ -16,7 +16,8 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 import { createAdminClient } from '../src/lib/db/supabase/admin.js';
-import { encrypt, decrypt, logger } from '../src/lib/utils/index.js';
+import { encrypt, decrypt } from '../src/lib/utils/crypto.js';
+import { logger } from '../src/lib/utils/logger.js';
 
 async function testInfrastructure() {
   console.log('🧪 Testando Infraestrutura MendoHub\n');

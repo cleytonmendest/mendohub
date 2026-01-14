@@ -8,7 +8,7 @@
  */
 
 import { redirect } from 'next/navigation';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth/session';
 import { createAdminClient } from '@/lib/db/supabase/admin';
 
 export default async function HomePage() {

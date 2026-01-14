@@ -21,7 +21,7 @@ export type LoginState = { error: string } | null;
  * Login Action para useFormState
  */
 export async function loginAction(
-  prevState: LoginState,
+  _prevState: LoginState,
   formData: FormData
 ): Promise<LoginState> {
   const email = formData.get('email') as string;
