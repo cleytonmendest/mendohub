@@ -8,6 +8,7 @@
 
 import { requirePlatformAdmin } from '@/lib/auth/guards';
 import { getOrganizationRepository } from '@/lib/db/supabase/repositories/organization';
+import { createAdminClient } from '@/lib/db/supabase/admin';
 import { createOrganizationSchema } from '@/lib/validations/organization';
 import { logger } from '@/lib/utils/logger';
 
@@ -56,9 +57,14 @@ export async function createClientAction(
   const data = validation.data;
 
   try {
-    // Verificar se slug já existe
-    const orgRepo = getOrganizationRepository();
-    const existingOrg = await orgRepo.findBySlug(data.slug);
+    // Verificar se slug já existe (usar admin client para bypass RLS)
+    const adminClient = createAdminClient();
+    const { data: existingOrg } = await adminClient
+      .from('organizations')
+      .select('id')
+      .eq('slug', data.slug)
+      .is('deleted_at', null)
+      .maybeSingle();
 
     if (existingOrg) {
       logger.warn('create_client_slug_exists', {
@@ -80,7 +86,8 @@ export async function createClientAction(
       ? new Date(Date.now() + data.trial_days * 24 * 60 * 60 * 1000).toISOString()
       : undefined;
 
-    // Criar organização
+    // Criar organização (já usa admin client internamente)
+    const orgRepo = getOrganizationRepository();
     const organization = await orgRepo.create({
       name: data.name,
       slug: data.slug,

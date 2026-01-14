@@ -13,6 +13,7 @@ import { createAdminClient } from '../admin';
 import type {
   Organization,
   OrganizationRepository,
+  OrganizationWithPlan,
   CreateOrganizationInput,
   UpdateOrganizationInput,
 } from '../../repositories/organization';
@@ -73,6 +74,27 @@ export class SupabaseOrganizationRepository implements OrganizationRepository {
     }
 
     return data;
+  }
+
+  async findAllWithPlan(): Promise<OrganizationWithPlan[]> {
+    // Usar admin client para visualização de todas as organizações
+    const supabase = createAdminClient();
+
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*, plan:plans(*)')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to list organizations: ${error.message}`);
+    }
+
+    // Supabase retorna plan como array, mas é relação 1:1, pegar primeiro elemento
+    return data.map((org) => ({
+      ...org,
+      plan: Array.isArray(org.plan) ? org.plan[0] || null : org.plan,
+    })) as OrganizationWithPlan[];
   }
 
   async create(input: CreateOrganizationInput): Promise<Organization> {

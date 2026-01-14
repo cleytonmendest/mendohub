@@ -11,10 +11,15 @@
  */
 
 import type { Database } from '@/types/database';
+import type { Plan } from './plan';
 
 export type Organization = Database['public']['Tables']['organizations']['Row'];
 export type CreateOrganizationInput = Database['public']['Tables']['organizations']['Insert'];
 export type UpdateOrganizationInput = Database['public']['Tables']['organizations']['Update'];
+
+export type OrganizationWithPlan = Organization & {
+  plan: Plan | null;
+};
 
 export interface OrganizationRepository {
   /**
@@ -31,6 +36,11 @@ export interface OrganizationRepository {
    * Lista todas as organizações (para platform admins)
    */
   findAll(): Promise<Organization[]>;
+
+  /**
+   * Lista todas as organizações com dados do plano (para platform admins)
+   */
+  findAllWithPlan(): Promise<OrganizationWithPlan[]>;
 
   /**
    * Cria nova organização

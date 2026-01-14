@@ -6,18 +6,36 @@
  */
 
 import { requirePlatformAdmin } from '@/lib/auth/guards';
-import { Building2, Plus, Search } from 'lucide-react';
+import { getOrganizationRepository } from '@/lib/db/supabase/repositories/organization';
+import { formatDate } from '@/lib/utils/format';
+import { Building2, Plus, Search, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Clientes - Admin - MendoHub',
   description: 'Gerenciamento de clientes e organizações',
 };
 
+const STATUS_LABELS = {
+  trial: 'Trial',
+  active: 'Ativo',
+  suspended: 'Suspenso',
+  cancelled: 'Cancelado',
+} as const;
+
+const STATUS_COLORS = {
+  trial: 'bg-blue-100 text-blue-800',
+  active: 'bg-green-100 text-green-800',
+  suspended: 'bg-yellow-100 text-yellow-800',
+  cancelled: 'bg-red-100 text-red-800',
+} as const;
+
 export default async function AdminClientsPage() {
   await requirePlatformAdmin();
 
-  // TODO: Buscar clientes do banco de dados
-  const clients = [];
+  // Buscar clientes do banco de dados
+  const orgRepo = getOrganizationRepository();
+  const clients = await orgRepo.findAllWithPlan();
 
   return (
     <div className="space-y-6">
@@ -29,14 +47,44 @@ export default async function AdminClientsPage() {
             Gerencie todas as organizações da plataforma
           </p>
         </div>
-        <a
+        <Link
           href="/admin/clients/new"
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
           Novo Cliente
-        </a>
+        </Link>
       </div>
+
+      {/* Stats */}
+      {clients.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-4">
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-sm font-medium text-gray-500">Total</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900">
+              {clients.length}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-sm font-medium text-gray-500">Ativos</p>
+            <p className="mt-1 text-2xl font-bold text-green-600">
+              {clients.filter((c) => c.status === 'active').length}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-sm font-medium text-gray-500">Trial</p>
+            <p className="mt-1 text-2xl font-bold text-blue-600">
+              {clients.filter((c) => c.status === 'trial').length}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-sm font-medium text-gray-500">Suspensos</p>
+            <p className="mt-1 text-2xl font-bold text-yellow-600">
+              {clients.filter((c) => c.status === 'suspended').length}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Search Bar */}
       <div className="rounded-lg border border-gray-200 bg-white p-4">
@@ -60,40 +108,101 @@ export default async function AdminClientsPage() {
           <p className="mt-2 text-sm text-gray-500">
             Comece criando seu primeiro cliente
           </p>
-          <a
+          <Link
             href="/admin/clients/new"
             className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
             Criar Cliente
-          </a>
+          </Link>
         </div>
       ) : (
-        <div className="rounded-lg border border-gray-200 bg-white">
-          <table className="w-full">
-            <thead className="border-b border-gray-200 bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Organização
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Plano
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Criado em
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {/* TODO: Map clients here */}
-            </tbody>
-          </table>
+        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b border-gray-200 bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Organização
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Plano
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Criado em
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {clients.map((client) => (
+                  <tr key={client.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                          <Building2 className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {client.name}
+                          </p>
+                          <p className="text-xs text-gray-500">/{client.slug}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-900">
+                        {client.plan?.name || 'Sem plano'}
+                      </p>
+                      {client.plan && (
+                        <p className="text-xs text-gray-500">
+                          R$ {client.plan.price_monthly.toFixed(2)}/mês
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                          STATUS_COLORS[
+                            client.status as keyof typeof STATUS_COLORS
+                          ]
+                        }`}
+                      >
+                        {
+                          STATUS_LABELS[
+                            client.status as keyof typeof STATUS_LABELS
+                          ]
+                        }
+                      </span>
+                      {client.status === 'trial' && client.trial_ends_at && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          até {formatDate(client.trial_ends_at)}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {formatDate(client.created_at)}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link
+                        href={`/${client.slug}/dashboard`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Acessar
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
