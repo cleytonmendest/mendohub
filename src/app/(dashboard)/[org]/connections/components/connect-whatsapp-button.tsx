@@ -55,24 +55,18 @@ export function ConnectWhatsAppButton({
 
   const metaAppId = process.env.NEXT_PUBLIC_META_APP_ID;
   const metaConfigId = process.env.NEXT_PUBLIC_META_CONFIG_ID;
+  const isConfigured = Boolean(metaAppId && metaConfigId);
 
-  // Carregar SDK do Facebook
   useEffect(() => {
-    if (!metaAppId || !metaConfigId) {
-      console.warn('Meta App ID ou Config ID não configurado');
-      return;
-    }
-
-    // Evitar carregar SDK múltiplas vezes
+    if (!isConfigured) return;
     if (window.FB) {
       setIsSdkLoaded(true);
       return;
     }
 
-    // Configurar callback de inicialização
     window.fbAsyncInit = function () {
       window.FB?.init({
-        appId: metaAppId,
+        appId: metaAppId!,
         autoLogAppEvents: true,
         xfbml: true,
         version: 'v21.0',
@@ -80,7 +74,6 @@ export function ConnectWhatsAppButton({
       setIsSdkLoaded(true);
     };
 
-    // Carregar SDK
     const script = document.createElement('script');
     script.src = 'https://connect.facebook.net/en_US/sdk.js';
     script.async = true;
@@ -89,40 +82,26 @@ export function ConnectWhatsAppButton({
     document.body.appendChild(script);
 
     return () => {
-      // Cleanup
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
+      script.parentNode?.removeChild(script);
     };
-  }, [metaAppId, metaConfigId]);
+  }, [metaAppId, metaConfigId, isConfigured]);
 
   const handleConnect = () => {
-    if (!metaAppId || !metaConfigId) {
-      alert('Configuração do Meta App não encontrada. Verifique as variáveis de ambiente.');
-      return;
-    }
-
-    if (!window.FB) {
-      alert('SDK do Facebook ainda não carregou. Aguarde um momento e tente novamente.');
-      return;
-    }
+    if (!isConfigured || !window.FB) return;
 
     setIsLoading(true);
 
-    // Lançar Meta Embedded Signup
     window.FB.login(
       (response) => {
         if (response.authResponse?.code) {
-          // Código de autorização recebido - processar de forma assíncrona
           handleAuthResponse(response.authResponse.code);
         } else {
-          // Usuário cancelou ou erro
           console.log('Conexão cancelada ou erro:', response);
           setIsLoading(false);
         }
       },
       {
-        config_id: metaConfigId,
+        config_id: metaConfigId!,
         response_type: 'code',
         override_default_response_type: true,
       }
@@ -131,23 +110,17 @@ export function ConnectWhatsAppButton({
 
   const handleAuthResponse = async (code: string) => {
     try {
-      const apiResponse = await fetch('/api/whatsapp/connect', {
+      const response = await fetch('/api/whatsapp/connect', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code,
-          organizationId,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, organizationId }),
       });
 
-      if (!apiResponse.ok) {
-        const error = await apiResponse.json();
-        throw new Error(error.error || 'Falha ao conectar WhatsApp');
+      if (!response.ok) {
+        const { error } = await response.json();
+        throw new Error(error || 'Falha ao conectar WhatsApp');
       }
 
-      // Sucesso - recarregar página para mostrar nova conexão
       router.refresh();
     } catch (error) {
       console.error('Erro ao processar conexão:', error);
@@ -161,7 +134,7 @@ export function ConnectWhatsAppButton({
     }
   };
 
-  const isDisabled = !metaAppId || !metaConfigId || !isSdkLoaded || isLoading;
+  const isDisabled = !isConfigured || !isSdkLoaded || isLoading;
 
   return (
     <Button onClick={handleConnect} size="lg" disabled={isDisabled}>
