@@ -80,7 +80,32 @@ export async function requirePlatformAdmin(): Promise<{
 }
 
 /**
+ * Verifica se o usuário atual é um Platform Admin
+ *
+ * @returns boolean
+ */
+export async function isPlatformAdmin(): Promise<boolean> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return false;
+  }
+
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from('platform_admins')
+    .select('id')
+    .eq('id', user.id)
+    .eq('is_active', true)
+    .single();
+
+  return data !== null;
+}
+
+/**
  * Verifica se o usuário tem acesso a uma organização
+ * Platform admins têm acesso a todas as organizações
  *
  * @param organizationId - ID da organização
  * @returns boolean
@@ -92,6 +117,11 @@ export async function canAccessOrganization(
 
   if (!user) {
     return false;
+  }
+
+  // Platform admins têm acesso a tudo
+  if (await isPlatformAdmin()) {
+    return true;
   }
 
   const supabase = await createClient();

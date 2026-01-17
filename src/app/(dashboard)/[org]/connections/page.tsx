@@ -4,10 +4,8 @@
  * Gerenciamento de conexões WhatsApp Business
  */
 
-import { requireAuth } from '@/lib/auth/guards';
 import { getWhatsAppConnectionRepository } from '@/lib/db/supabase/repositories/whatsapp_connection';
 import { getOrganizationRepository } from '@/lib/db/supabase/repositories/organization';
-import { redirect } from 'next/navigation';
 import { ConnectionsList } from './components/connections-list';
 import { ConnectWhatsAppButton } from './components/connect-whatsapp-button';
 
@@ -18,21 +16,15 @@ interface ConnectionsPageProps {
 export default async function ConnectionsPage({
   params,
 }: ConnectionsPageProps) {
-  // Verificar autenticação
-  await requireAuth();
-
-  // Resolver params
   const { org: orgSlug } = await params;
 
-  // Buscar organização
   const orgRepo = getOrganizationRepository();
   const organization = await orgRepo.findBySlug(orgSlug);
 
   if (!organization) {
-    redirect('/unauthorized');
+    return <div>Organização não encontrada</div>;
   }
 
-  // Buscar conexões WhatsApp da organização
   const connectionRepo = getWhatsAppConnectionRepository();
   const connections = await connectionRepo.findByOrganizationId(organization.id);
 
