@@ -820,7 +820,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_platform_admin: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
+      user_organization_id: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never

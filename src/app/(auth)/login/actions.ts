@@ -8,7 +8,6 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/db/supabase/server';
-import { createAdminClient } from '@/lib/db/supabase/admin';
 import { logger } from '@/lib/utils/logger';
 
 export type LoginResult =
@@ -49,9 +48,8 @@ export async function loginAction(
   });
 
   // Verificar se é platform admin ou usuário de organização
-  const adminClient = createAdminClient();
-
-  const { data: platformAdmin, error: adminError } = await adminClient
+  // RLS permite que admins vejam sua própria linha
+  const { data: platformAdmin, error: adminError } = await supabase
     .from('platform_admins')
     .select('id')
     .eq('id', data.user.id)
@@ -72,7 +70,8 @@ export async function loginAction(
   logger.info('not_platform_admin_checking_org', { user_id: data.user.id });
 
   // Pegar organização do usuário
-  const { data: userData, error: userError } = await adminClient
+  // RLS funciona corretamente (usa public.user_organization_id())
+  const { data: userData, error: userError } = await supabase
     .from('users')
     .select('organization:organizations(slug)')
     .eq('id', data.user.id)
@@ -80,12 +79,13 @@ export async function loginAction(
 
   logger.info('organization_check', {
     user_id: data.user.id,
-    found: !!userData?.organization,
+    found: !!userData,
     error: userError?.message,
   });
 
-  if (userData?.organization) {
-    const orgSlug = (userData.organization as { slug: string }).slug;
+  if (userData) {
+    const org = userData as unknown as { organization: { slug: string } };
+    const orgSlug = org.organization.slug;
     redirect(`/${orgSlug}/dashboard`);
   }
 
@@ -129,9 +129,8 @@ export async function login(
   });
 
   // Verificar se é platform admin ou usuário de organização
-  const adminClient = createAdminClient();
-
-  const { data: platformAdmin, error: adminError } = await adminClient
+  // RLS permite que admins vejam sua própria linha
+  const { data: platformAdmin, error: adminError } = await supabase
     .from('platform_admins')
     .select('id')
     .eq('id', data.user.id)
@@ -152,7 +151,8 @@ export async function login(
   logger.info('not_platform_admin_checking_org', { user_id: data.user.id });
 
   // Pegar organização do usuário
-  const { data: userData, error: userError } = await adminClient
+  // RLS funciona corretamente (usa public.user_organization_id())
+  const { data: userData, error: userError } = await supabase
     .from('users')
     .select('organization:organizations(slug)')
     .eq('id', data.user.id)
@@ -160,12 +160,13 @@ export async function login(
 
   logger.info('organization_check', {
     user_id: data.user.id,
-    found: !!userData?.organization,
+    found: !!userData,
     error: userError?.message,
   });
 
-  if (userData?.organization) {
-    const orgSlug = (userData.organization as { slug: string }).slug;
+  if (userData) {
+    const org = userData as unknown as { organization: { slug: string } };
+    const orgSlug = org.organization.slug;
     redirect(`/${orgSlug}/dashboard`);
   }
 

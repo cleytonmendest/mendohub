@@ -8,12 +8,11 @@
  *
  * IMPORTANTE:
  * - Executa no Edge Runtime (limitações de Node.js)
- * - Não pode usar todos os helpers (sem acesso a cookies direto)
  * - Mantém sessão atualizada automaticamente
+ * - RESPEITA RLS (não usa admin client desnecessariamente)
  */
 
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
@@ -51,38 +50,32 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  console.log(user?.email, pathname, 'initial info')
+
   // Rotas públicas (não precisam de autenticação)
   const publicRoutes = ['/login', '/signup', '/forgot-password', '/reset-password'];
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
   // Se está tentando acessar rota pública e está autenticado, redireciona para dashboard
   if (isPublicRoute && user) {
-    // Criar admin client para bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
     // Se é platform admin, redireciona para admin dashboard
-    const { data: platformAdmin } = await adminClient
+    // RLS permite que platform admins vejam sua própria linha
+    const { data: platformAdmin } = await supabase
       .from('platform_admins')
       .select('id')
       .eq('id', user.id)
       .eq('is_active', true)
       .single();
 
+      console.log('public e user', platformAdmin)
+
     if (platformAdmin) {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
 
     // Senão, redireciona para dashboard da organização do usuário
-    const { data: userData } = await adminClient
+    // RLS agora funciona sem recursão (usa public.user_organization_id())
+    const { data: userData } = await supabase
       .from('users')
       .select('organization:organizations(slug)')
       .eq('id', user.id)
@@ -105,19 +98,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Verificar se é platform admin usando Admin Client (bypass RLS para evitar recursão)
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
-    const { data: platformAdmin } = await adminClient
+    // Verificar se é platform admin (RLS permite que admins vejam sua própria linha)
+    const { data: platformAdmin } = await supabase
       .from('platform_admins')
       .select('id')
       .eq('id', user.id)
@@ -143,20 +125,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Criar admin client para bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
     // Verificar se o usuário tem acesso a esta organização
-    const { data: userData } = await adminClient
+    // RLS funciona corretamente (usa public.user_organization_id())
+    const { data: userData } = await supabase
       .from('users')
       .select('organization:organizations(slug)')
       .eq('id', user.id)

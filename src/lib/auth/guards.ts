@@ -11,7 +11,6 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/db/supabase/server';
-import { createAdminClient } from '@/lib/db/supabase/admin';
 import { getCurrentUser } from './session';
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
@@ -60,10 +59,10 @@ export async function requirePlatformAdmin(): Promise<{
 }> {
   const user = await requireAuth();
 
-  // Verificar se é platform admin (usando admin client para bypass RLS)
-  const adminClient = createAdminClient();
+  // Verificar se é platform admin (RLS permite que admins vejam sua própria linha)
+  const supabase = await createClient();
 
-  const { data: platformAdmin, error } = await adminClient
+  const { data: platformAdmin, error } = await supabase
     .from('platform_admins')
     .select('*')
     .eq('id', user.id)
