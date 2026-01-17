@@ -50,7 +50,21 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  console.log(user?.email, pathname, 'initial info')
+  // Lazy evaluation: só busca platform_admin quando necessário
+  let platformAdmin: { id: string } | null | undefined = undefined;
+
+  const getPlatformAdmin = async () => {
+    if (platformAdmin === undefined) {
+      const { data } = await supabase
+        .from('platform_admins')
+        .select('id')
+        .eq('id', user?.id)
+        .eq('is_active', true)
+        .single();
+      platformAdmin = data;
+    }
+    return platformAdmin;
+  };
 
   // Rotas públicas (não precisam de autenticação)
   const publicRoutes = ['/login', '/signup', '/forgot-password', '/reset-password'];
@@ -58,18 +72,10 @@ export async function middleware(request: NextRequest) {
 
   // Se está tentando acessar rota pública e está autenticado, redireciona para dashboard
   if (isPublicRoute && user) {
-    // Se é platform admin, redireciona para admin dashboard
-    // RLS permite que platform admins vejam sua própria linha
-    const { data: platformAdmin } = await supabase
-      .from('platform_admins')
-      .select('id')
-      .eq('id', user.id)
-      .eq('is_active', true)
-      .single();
+    // Lazy: só busca se usuário está autenticado em rota pública
+    const admin = await getPlatformAdmin();
 
-      console.log('public e user', platformAdmin)
-
-    if (platformAdmin) {
+    if (admin) {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
 
@@ -98,15 +104,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Verificar se é platform admin (RLS permite que admins vejam sua própria linha)
-    const { data: platformAdmin } = await supabase
-      .from('platform_admins')
-      .select('id')
-      .eq('id', user.id)
-      .eq('is_active', true)
-      .single();
+    // Lazy: só busca se está acessando /admin/*
+    const admin = await getPlatformAdmin();
 
-    if (!platformAdmin) {
+    if (!admin) {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
 
@@ -123,6 +124,14 @@ export async function middleware(request: NextRequest) {
 
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Lazy: só busca platform admin se for verificar permissões de org
+    const admin = await getPlatformAdmin();
+
+    // Platform admins podem acessar qualquer organização
+    if (admin) {
+      return supabaseResponse;
     }
 
     // Verificar se o usuário tem acesso a esta organização
