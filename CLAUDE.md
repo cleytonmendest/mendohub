@@ -49,6 +49,15 @@ supabase migration new migration_name
 npm run supabase:reset  # Apply locally
 ```
 
+**SQL Learning Mode - IMPORTANT for AI Assistants**:
+- ❌ DO NOT create SQL migrations automatically
+- ✅ EXPLAIN what SQL changes are needed and why
+- ✅ ONLY create migration files when explicitly asked
+- ✅ Help debug and explain existing SQL code
+- ✅ Suggest SQL improvements but let the developer implement
+
+**Rationale**: The developer is learning SQL hands-on. Teaching through explanation is more valuable than doing the work automatically.
+
 ## Architecture Principles
 
 ### 1. KISS (Keep It Simple, Stupid) - TOP PRIORITY
