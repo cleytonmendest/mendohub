@@ -10,17 +10,28 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { ConversationList } from './components/conversation-list';
 import { MessageArea } from './components/message-area';
-import { mockConversations, mockMessages, type Conversation, type Message } from './mock-data';
+import { useConversations } from '@/hooks/use-conversations';
+import { mockMessages, type Message } from './mock-data';
+import type { UiConversation } from './types';
 
 export default function InboxPage() {
-  const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
+  // Get org from URL params
+  const params = useParams<{ org: string }>();
+  const orgId = params?.org || null;
+
+  // Fetch conversations from API
+  const { conversations: apiConversations, isLoading, isError } = useConversations(orgId);
+
+  // Local state
   const [messages, setMessages] = useState<Record<string, Message[]>>(mockMessages);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
-    mockConversations[0]?.id || null
-  );
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Use API conversations or empty array
+  const conversations: UiConversation[] = apiConversations || [];
 
   // Conversa selecionada
   const selectedConversation = conversations.find(
@@ -51,26 +62,48 @@ export default function InboxPage() {
       status: 'sent',
     };
 
-    // Adicionar mensagem ao array
+    // Adicionar mensagem ao array local (temporário - Fase 4.3 implementará POST real)
     setMessages((prev) => ({
       ...prev,
       [selectedConversationId]: [...(prev[selectedConversationId] || []), newMessage],
     }));
 
-    // Atualizar última mensagem na conversa
-    setConversations((prev) =>
-      prev.map((conv) =>
-        conv.id === selectedConversationId
-          ? {
-              ...conv,
-              lastMessageContent: content.trim(),
-              lastMessageAt: new Date(),
-              lastMessageDirection: 'outbound',
-            }
-          : conv
-      )
-    );
+    // TODO (Fase 4.3): POST /api/[org]/conversations/[id]/messages
+    // TODO: Atualizar conversas via mutate() do SWR após POST
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-7rem)] items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+          <p className="text-muted-foreground">Carregando conversas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="flex h-[calc(100vh-7rem)] items-center justify-center">
+        <div className="text-center space-y-4 max-w-md">
+          <div className="text-destructive text-4xl">⚠️</div>
+          <h2 className="text-xl font-semibold">Erro ao carregar conversas</h2>
+          <p className="text-muted-foreground">
+            Não foi possível carregar as conversas. Tente recarregar a página.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Recarregar página
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-7rem)]">
