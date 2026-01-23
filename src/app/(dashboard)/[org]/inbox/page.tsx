@@ -15,6 +15,7 @@ import { ConversationList } from './components/conversation-list';
 import { MessageArea } from './components/message-area';
 import { useConversations } from '@/hooks/use-conversations';
 import { useMessages } from '@/hooks/use-messages';
+import { useSendMessage } from '@/hooks/use-send-message';
 import type { Conversation } from '@/lib/db/repositories/conversation';
 
 export default function InboxPage() {
@@ -37,8 +38,11 @@ export default function InboxPage() {
   const {
     messages: apiMessages,
     isLoading: isLoadingMessages,
-    mutate: _mutateMessages, // Será usado na Fase 4.3
+    mutate: mutateMessages,
   } = useMessages(orgId, selectedConversationId);
+
+  // Hook para enviar mensagens
+  const { sendMessage } = useSendMessage();
 
   // Use API data or empty arrays
   const conversations: Conversation[] = apiConversations || [];
@@ -54,15 +58,24 @@ export default function InboxPage() {
   );
 
   // Handler para enviar mensagem
-  const handleSendMessage = async (content: string) => {
-    if (!selectedConversationId || !content.trim() || !orgId) return;
+  const handleSendMessage = async (content: string): Promise<boolean> => {
+    if (!selectedConversationId || !content.trim() || !orgId) {
+      return false;
+    }
 
-    // TODO (Fase 4.3): POST /api/[org]/conversations/[id]/messages
-    // Por enquanto, apenas revalida as mensagens após um delay simulado
-    console.log('TODO: Enviar mensagem:', content);
+    const message = await sendMessage({
+      orgId,
+      conversationId: selectedConversationId,
+      content,
+    });
 
-    // Revalidar mensagens após envio (será útil na Fase 4.3)
-    // mutateMessages();
+    if (message) {
+      // Revalidar mensagens após envio bem-sucedido
+      mutateMessages();
+      return true;
+    }
+
+    return false;
   };
 
   // Loading state

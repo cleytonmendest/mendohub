@@ -20,28 +20,33 @@ import { EmojiPicker } from './emoji-picker';
 import { AttachmentOptions } from './attachment-options';
 
 interface MessageInputProps {
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string) => Promise<boolean>;
+  disabled?: boolean;
 }
 
-export function MessageInput({ onSendMessage }: MessageInputProps) {
+export function MessageInput({ onSendMessage, disabled = false }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const isDisabled = disabled || isSending;
+
   const handleSend = async () => {
-    if (!message.trim() || isSending) return;
+    if (!message.trim() || isDisabled) return;
 
     setIsSending(true);
 
     try {
-      // Chamar callback de envio
-      onSendMessage(message);
+      // Chamar callback de envio e aguardar resposta
+      const success = await onSendMessage(message);
 
-      setMessage('');
+      if (success) {
+        setMessage('');
 
-      // Resetar altura do textarea
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+        // Resetar altura do textarea
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
       }
     } finally {
       setIsSending(false);
@@ -50,7 +55,7 @@ export function MessageInput({ onSendMessage }: MessageInputProps) {
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     // Ctrl/Cmd + Enter para enviar
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !isDisabled) {
       e.preventDefault();
       handleSend();
     }
@@ -112,12 +117,12 @@ export function MessageInput({ onSendMessage }: MessageInputProps) {
       <div className="flex items-center gap-1">
         <TemplatesPopover
           onSelectTemplate={handleSelectTemplate}
-          disabled={isSending}
+          disabled={isDisabled}
         />
-        <EmojiPicker onSelectEmoji={handleSelectEmoji} disabled={isSending} />
+        <EmojiPicker onSelectEmoji={handleSelectEmoji} disabled={isDisabled} />
         <AttachmentOptions
           onSelectFile={handleSelectFile}
-          disabled={isSending}
+          disabled={isDisabled}
         />
       </div>
 
@@ -129,7 +134,7 @@ export function MessageInput({ onSendMessage }: MessageInputProps) {
           value={message}
           onChange={handleTextareaChange}
           onKeyDown={handleKeyDown}
-          disabled={isSending}
+          disabled={isDisabled}
           className={cn(
             'min-h-[44px] max-h-[200px] resize-none',
             'focus-visible:ring-1'
@@ -138,11 +143,15 @@ export function MessageInput({ onSendMessage }: MessageInputProps) {
         />
         <Button
           onClick={handleSend}
-          disabled={!message.trim() || isSending}
+          disabled={!message.trim() || isDisabled}
           size="icon"
           className="h-11 w-11 flex-shrink-0"
         >
-          <Send className="h-4 w-4" />
+          {isSending ? (
+            <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
         </Button>
       </div>
 

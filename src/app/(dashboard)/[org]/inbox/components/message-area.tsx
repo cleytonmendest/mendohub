@@ -23,7 +23,7 @@ interface MessageAreaProps {
   conversation: Conversation | null;
   messages: Message[];
   isLoadingMessages?: boolean;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string) => Promise<boolean>;
 }
 
 export function MessageArea({
