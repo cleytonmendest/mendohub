@@ -14,7 +14,7 @@ import { useParams } from 'next/navigation';
 import { ConversationList } from './components/conversation-list';
 import { MessageArea } from './components/message-area';
 import { useConversations } from '@/hooks/use-conversations';
-import { mockMessages, type Message } from './mock-data';
+import { useMessages } from '@/hooks/use-messages';
 import type { Conversation } from '@/lib/db/repositories/conversation';
 
 export default function InboxPage() {
@@ -22,26 +22,31 @@ export default function InboxPage() {
   const params = useParams<{ org: string }>();
   const orgId = params?.org || null;
 
-  // Fetch conversations from API
-  const { conversations: apiConversations, isLoading, isError } = useConversations(orgId);
-
   // Local state
-  const [messages, setMessages] = useState<Record<string, Message[]>>(mockMessages);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Use API conversations or empty array
+  // Fetch conversations from API
+  const {
+    conversations: apiConversations,
+    isLoading: isLoadingConversations,
+    isError: isConversationsError,
+  } = useConversations(orgId);
+
+  // Fetch messages for selected conversation
+  const {
+    messages: apiMessages,
+    isLoading: isLoadingMessages,
+    mutate: _mutateMessages, // Será usado na Fase 4.3
+  } = useMessages(orgId, selectedConversationId);
+
+  // Use API data or empty arrays
   const conversations: Conversation[] = apiConversations || [];
+  const messages = apiMessages || [];
 
   // Conversa selecionada
-  const selectedConversation = conversations.find(
-    (c) => c.id === selectedConversationId
-  ) || null;
-
-  // Mensagens da conversa selecionada
-  const conversationMessages = selectedConversationId
-    ? messages[selectedConversationId] || []
-    : [];
+  const selectedConversation =
+    conversations.find((c) => c.id === selectedConversationId) || null;
 
   // Filtrar conversas pela busca
   const filteredConversations = conversations.filter((conv) =>
@@ -49,31 +54,19 @@ export default function InboxPage() {
   );
 
   // Handler para enviar mensagem
-  const handleSendMessage = (content: string) => {
-    if (!selectedConversationId || !content.trim()) return;
-
-    const newMessage: Message = {
-      id: `${selectedConversationId}-${Date.now()}`,
-      conversationId: selectedConversationId,
-      content: content.trim(),
-      direction: 'outbound',
-      timestamp: new Date(),
-      isAiGenerated: false,
-      status: 'sent',
-    };
-
-    // Adicionar mensagem ao array local (temporário - Fase 4.3 implementará POST real)
-    setMessages((prev) => ({
-      ...prev,
-      [selectedConversationId]: [...(prev[selectedConversationId] || []), newMessage],
-    }));
+  const handleSendMessage = async (content: string) => {
+    if (!selectedConversationId || !content.trim() || !orgId) return;
 
     // TODO (Fase 4.3): POST /api/[org]/conversations/[id]/messages
-    // TODO: Atualizar conversas via mutate() do SWR após POST
+    // Por enquanto, apenas revalida as mensagens após um delay simulado
+    console.log('TODO: Enviar mensagem:', content);
+
+    // Revalidar mensagens após envio (será útil na Fase 4.3)
+    // mutateMessages();
   };
 
   // Loading state
-  if (isLoading) {
+  if (isLoadingConversations) {
     return (
       <div className="flex h-[calc(100vh-7rem)] items-center justify-center">
         <div className="text-center space-y-4">
@@ -85,7 +78,7 @@ export default function InboxPage() {
   }
 
   // Error state
-  if (isError) {
+  if (isConversationsError) {
     return (
       <div className="flex h-[calc(100vh-7rem)] items-center justify-center">
         <div className="text-center space-y-4 max-w-md">
@@ -122,7 +115,8 @@ export default function InboxPage() {
       <div className="flex-1 flex flex-col">
         <MessageArea
           conversation={selectedConversation}
-          messages={conversationMessages}
+          messages={messages}
+          isLoadingMessages={isLoadingMessages}
           onSendMessage={handleSendMessage}
         />
       </div>

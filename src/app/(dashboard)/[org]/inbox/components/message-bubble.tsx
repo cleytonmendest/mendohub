@@ -13,23 +13,18 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Bot, Check, CheckCheck } from 'lucide-react';
+import type { Message } from '@/lib/db/repositories/message';
 
 interface MessageBubbleProps {
-  message: {
-    id: string;
-    content: string;
-    direction: string;
-    timestamp: Date;
-    isAiGenerated: boolean;
-    status?: string;
-  };
+  message: Message;
 }
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isInbound = message.direction === 'inbound';
   const isOutbound = message.direction === 'outbound';
 
-  const formatTime = (date: Date) => {
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
     return date.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -66,7 +61,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         )}
       >
         {/* Badge de IA (se aplicável) */}
-        {message.isAiGenerated && isOutbound && (
+        {message.is_ai_generated && isOutbound && (
           <div className="mb-1">
             <Badge
               variant="secondary"
@@ -96,7 +91,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               isInbound ? 'text-muted-foreground' : 'text-primary-foreground/70'
             )}
           >
-            {formatTime(message.timestamp)}
+            {message.created_at ? formatTime(message.created_at) : ''}
           </span>
           {getStatusIcon()}
         </div>

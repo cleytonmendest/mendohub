@@ -17,15 +17,21 @@ import { MessageBubble } from './message-bubble';
 import { ContactInfoPopover } from './contact-info-popover';
 import { ConversationOptionsMenu } from './conversation-options-menu';
 import type { Conversation } from '@/lib/db/repositories/conversation';
-import type { Message } from '../mock-data';
+import type { Message } from '@/lib/db/repositories/message';
 
 interface MessageAreaProps {
   conversation: Conversation | null;
   messages: Message[];
+  isLoadingMessages?: boolean;
   onSendMessage: (content: string) => void;
 }
 
-export function MessageArea({ conversation, messages, onSendMessage }: MessageAreaProps) {
+export function MessageArea({
+  conversation,
+  messages,
+  isLoadingMessages = false,
+  onSendMessage,
+}: MessageAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const getInitials = (name: string) => {
@@ -89,13 +95,40 @@ export function MessageArea({ conversation, messages, onSendMessage }: MessageAr
 
       {/* Área de mensagens */}
       <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4 max-w-4xl mx-auto">
-          {messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
-          ))}
-          {/* Referência para auto-scroll */}
-          <div ref={messagesEndRef} />
-        </div>
+        {isLoadingMessages ? (
+          // Loading state
+          <div className="space-y-4 max-w-4xl mx-auto">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`flex items-end gap-2 ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}
+              >
+                <div
+                  className={`max-w-[70%] rounded-lg px-4 py-3 ${
+                    i % 2 === 0 ? 'bg-primary/20' : 'bg-muted'
+                  } animate-pulse`}
+                >
+                  <div className="h-4 bg-current opacity-20 rounded w-48 mb-2" />
+                  <div className="h-3 bg-current opacity-10 rounded w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : messages.length === 0 ? (
+          // Empty state
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            <p className="text-sm">Nenhuma mensagem ainda</p>
+          </div>
+        ) : (
+          // Messages
+          <div className="space-y-4 max-w-4xl mx-auto">
+            {messages.map((message) => (
+              <MessageBubble key={message.id} message={message} />
+            ))}
+            {/* Referência para auto-scroll */}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
       </ScrollArea>
 
       {/* Input de mensagem */}
