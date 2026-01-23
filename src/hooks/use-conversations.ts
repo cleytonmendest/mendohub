@@ -8,7 +8,6 @@
 import useSWR from 'swr';
 import { fetcher } from '@/lib/utils/fetcher';
 import type { Conversation } from '@/lib/db/repositories/conversation';
-import { toUiConversation, type UiConversation } from '@/app/(dashboard)/[org]/inbox/types';
 
 interface UseConversationsOptions {
   /**
@@ -60,14 +59,11 @@ export function useConversations(
     }
   );
 
-  // Converter dados do banco para formato da UI
-  const uiConversations: UiConversation[] | undefined = data?.map(toUiConversation);
-
   return {
-    conversations: uiConversations,
+    conversations: data,
     isLoading,
-    isError: error,
+    isError: !!error,
     error,
-    mutate, // Para atualização manual
+    mutate,
   };
 }

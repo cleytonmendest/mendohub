@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { User, Phone, Mail, MapPin, Tag } from 'lucide-react';
-import type { Conversation } from '../mock-data';
+import type { Conversation } from '@/lib/db/repositories/conversation';
 
 interface ContactInfoPopoverProps {
   conversation: Conversation;
@@ -44,15 +44,15 @@ export function ContactInfoPopover({ conversation }: ContactInfoPopoverProps) {
           <div className="flex flex-col items-center gap-3">
             <Avatar className="h-20 w-20">
               <AvatarImage
-                src={conversation.customerProfilePicUrl || undefined}
+                src={conversation.customer_profile_pic_url || undefined}
               />
               <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                {getInitials(conversation.customerName)}
+                {getInitials(conversation.customer_name || 'Desconhecido')}
               </AvatarFallback>
             </Avatar>
             <div className="text-center">
               <h3 className="font-semibold text-lg">
-                {conversation.customerName}
+                {conversation.customer_name || 'Desconhecido'}
               </h3>
               <p className="text-sm text-muted-foreground">Cliente</p>
             </div>
@@ -64,7 +64,7 @@ export function ContactInfoPopover({ conversation }: ContactInfoPopoverProps) {
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-sm">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>{conversation.customerPhone}</span>
+              <span>{conversation.customer_phone}</span>
             </div>
 
             {/* Email mockado - será dinâmico no futuro */}

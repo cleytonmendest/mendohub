@@ -1,6 +1,6 @@
 # Fase 4: Integração Frontend ↔ Backend
 
-**Status**: Em Progresso (Fase 4.1 Completa)
+**Status**: Em Progresso (Fase 4.1 Completa + Refatoração KISS)
 
 ## Contexto
 
@@ -14,9 +14,39 @@ A **Fase 4** conecta o frontend (que usa `mock-data.ts`) com as APIs reais.
 
 ---
 
+## Princípios Aplicados
+
+Esta fase segue os princípios do projeto definidos no `CLAUDE.md`:
+
+- **KISS**: Usar tipos do Supabase diretamente, sem camadas de conversão
+- **DRY**: Uma única definição de tipos (repository)
+- **Pain-Driven Complexity**: Sem abstrações prematuras
+
+### Decisão Arquitetural: snake_case na UI
+
+**Problema**: Supabase retorna `snake_case`, componentes React tradicionalmente usam `camelCase`.
+
+**Decisão**: Usar `snake_case` diretamente nos componentes.
+
+**Justificativa**:
+- Zero código de conversão
+- Uma única fonte de verdade para tipos
+- TypeScript garante type-safety independente do naming
+- É o padrão usado pelo próprio Supabase Dashboard
+
+**Exemplo**:
+```tsx
+// Componente usa tipos do Supabase diretamente
+<h3>{conversation.customer_name}</h3>
+<span>{conversation.last_message_at}</span>
+```
+
+---
+
 ## Roadmap - Subfases
 
 ### **Fase 4.1: Buscar Conversas Reais** ✅ COMPLETA
+
 **Objetivo**: Substituir `mockConversations` por dados reais da API.
 
 **Escopo**:
@@ -25,15 +55,25 @@ A **Fase 4** conecta o frontend (que usa `mock-data.ts`) com as APIs reais.
 - Loading/error states
 - Polling automático (3s)
 
-**Arquivos Impactados**:
-- `src/lib/utils/fetcher.ts` (NOVO)
-- `src/hooks/use-conversations.ts` (NOVO)
-- `src/app/(dashboard)/[org]/inbox/types.ts` (NOVO)
-- `src/app/(dashboard)/[org]/inbox/page.tsx` (ATUALIZADO)
+**Arquivos Criados**:
+- `src/lib/utils/fetcher.ts` - Helper para requests HTTP
+- `src/hooks/use-conversations.ts` - Hook SWR para conversas
+
+**Arquivos Modificados**:
+- `src/app/(dashboard)/[org]/inbox/page.tsx` - Usa API real
+- `src/app/(dashboard)/[org]/inbox/components/conversation-list.tsx` - snake_case
+- `src/app/(dashboard)/[org]/inbox/components/message-area.tsx` - snake_case
+- `src/app/(dashboard)/[org]/inbox/components/contact-info-popover.tsx` - snake_case
+
+**Refatoração KISS** (aplicada após implementação inicial):
+- ❌ Removido `types.ts` (tipos duplicados)
+- ❌ Removido `toUiConversation()` (conversão desnecessária)
+- ✅ Componentes usam `Conversation` do repository diretamente
 
 ---
 
 ### **Fase 4.2: Buscar Mensagens Reais** ⏳ PRÓXIMA
+
 **Objetivo**: Substituir `mockMessages` por dados reais da API.
 
 **Escopo**:
@@ -44,18 +84,24 @@ A **Fase 4** conecta o frontend (que usa `mock-data.ts`) com as APIs reais.
 
 **Arquivos a Criar/Atualizar**:
 - `src/hooks/use-messages.ts` (NOVO)
-- `src/app/(dashboard)/[org]/inbox/types.ts` (adicionar `toUiMessage`)
 - `src/app/(dashboard)/[org]/inbox/page.tsx` (substituir `mockMessages`)
-- `src/app/(dashboard)/[org]/inbox/components/message-area.tsx` (adicionar loading)
+- `src/app/(dashboard)/[org]/inbox/components/message-area.tsx` (loading state)
+- `src/app/(dashboard)/[org]/inbox/components/message-bubble.tsx` (usar tipo do repository)
+
+**Abordagem KISS**:
+- Usar tipo `Message` do repository diretamente
+- Sem funções de conversão
+- Componentes usam `message.is_ai_generated`, `message.created_at`, etc.
 
 **Critérios de Sucesso**:
 - Mensagens reais aparecem ao selecionar conversa
-- Loading skeleton durante fetch
+- Loading state durante fetch
 - Sem usar `mockMessages`
 
 ---
 
 ### **Fase 4.3: Enviar Mensagens** ⏳ PENDENTE
+
 **Objetivo**: Implementar POST de mensagens para WhatsApp via API.
 
 **Escopo**:
@@ -78,6 +124,7 @@ A **Fase 4** conecta o frontend (que usa `mock-data.ts`) com as APIs reais.
 ---
 
 ### **Fase 4.4: Loading & Error States Refinados** ⏳ PENDENTE
+
 **Objetivo**: Melhorar UX com estados de carregamento e erro.
 
 **Escopo**:
@@ -101,14 +148,13 @@ A **Fase 4** conecta o frontend (que usa `mock-data.ts`) com as APIs reais.
 ---
 
 ### **Fase 4.5: Limpeza & Remover Mocks** ⏳ PENDENTE
+
 **Objetivo**: Remover código temporário e mock data.
 
 **Escopo**:
 - Deletar `src/app/(dashboard)/[org]/inbox/mock-data.ts`
 - Remover imports de mock data
 - Limpar TODOs relacionados
-- Atualizar comentários de código
-- Documentar arquitetura final
 
 **Arquivos a Deletar**:
 - `src/app/(dashboard)/[org]/inbox/mock-data.ts`
@@ -122,16 +168,38 @@ A **Fase 4** conecta o frontend (que usa `mock-data.ts`) com as APIs reais.
 
 ## Fase 4.1: Detalhamento ✅
 
-### O Que Foi Implementado
+### Arquitetura Final
 
-#### 1. **Fetcher Helper** (`src/lib/utils/fetcher.ts`)
+```
+src/
+├── lib/
+│   ├── db/
+│   │   └── repositories/
+│   │       └── conversation.ts    ← Tipos oficiais (snake_case)
+│   └── utils/
+│       └── fetcher.ts             ← Helper para requests HTTP
+├── hooks/
+│   └── use-conversations.ts       ← Hook SWR (retorna tipo do repository)
+└── app/
+    └── (dashboard)/
+        └── [org]/
+            └── inbox/
+                ├── mock-data.ts   ← Temporário (Message apenas)
+                ├── page.tsx       ← Usa Conversation do repository
+                └── components/
+                    ├── conversation-list.tsx  ← snake_case
+                    ├── message-area.tsx       ← snake_case
+                    └── contact-info-popover.tsx ← snake_case
+```
+
+### Fetcher Helper (`src/lib/utils/fetcher.ts`)
+
 Utilitário para fazer requisições HTTP com SWR.
 
 **Funcionalidades**:
 - Parse automático de `ApiSuccess<T>` e `ApiError`
 - Lança `FetchError` customizado com status code
 - Suporte a GET e POST/PUT/PATCH
-- Tratamento de erros JSON parse
 
 **Uso**:
 ```typescript
@@ -140,7 +208,8 @@ const data = await fetcher<Conversation[]>('/api/org-slug/conversations');
 
 ---
 
-#### 2. **Hook useConversations** (`src/hooks/use-conversations.ts`)
+### Hook useConversations (`src/hooks/use-conversations.ts`)
+
 Hook SWR para buscar conversas de uma organização.
 
 **Features**:
@@ -148,16 +217,16 @@ Hook SWR para buscar conversas de uma organização.
 - Revalidação on focus/reconnect
 - Deduplicação de requests (2s)
 - Filtros: `status`, `assignedTo`
-- Conversão automática para formato UI (`toUiConversation`)
+- Retorna tipo `Conversation` do repository diretamente
 
 **Retorno**:
 ```typescript
 {
-  conversations: UiConversation[] | undefined;
+  conversations: Conversation[] | undefined;
   isLoading: boolean;
   isError: boolean;
   error: Error | undefined;
-  mutate: () => void; // Para revalidação manual
+  mutate: () => void;
 }
 ```
 
@@ -167,114 +236,19 @@ const { conversations, isLoading, isError } = useConversations('org-slug', {
   status: 'open',
   refreshInterval: 3000
 });
+
+// Componente usa snake_case
+{conversations?.map(conv => (
+  <div key={conv.id}>
+    <h3>{conv.customer_name}</h3>
+    <p>{conv.last_message_content}</p>
+  </div>
+))}
 ```
 
 ---
 
-#### 3. **Tipos UI** (`src/app/(dashboard)/[org]/inbox/types.ts`)
-Tipos para compatibilidade entre mock data e dados reais do banco.
-
-**Por quê?**
-- Mock data usa `camelCase`: `customerName`, `lastMessageAt`
-- Banco Supabase usa `snake_case`: `customer_name`, `last_message_at`
-- Componentes UI já esperam `camelCase`
-
-**Solução**:
-- Interfaces `UiConversation` e `UiMessage` (camelCase)
-- Função `toUiConversation(dbConv)` converte DB → UI
-- Permite migração gradual sem quebrar componentes
-
-**Exemplo**:
-```typescript
-// Banco (snake_case)
-const dbConv: Conversation = {
-  id: '123',
-  customer_name: 'João',
-  last_message_at: '2026-01-21T10:00:00Z',
-  ...
-};
-
-// UI (camelCase)
-const uiConv: UiConversation = toUiConversation(dbConv);
-// {
-//   id: '123',
-//   customerName: 'João',
-//   lastMessageAt: Date(2026-01-21T10:00:00Z),
-//   ...
-// }
-```
-
----
-
-#### 4. **Inbox Page Atualizado** (`src/app/(dashboard)/[org]/inbox/page.tsx`)
-
-**Mudanças**:
-
-**ANTES** (mock):
-```typescript
-const [conversations, setConversations] = useState(mockConversations);
-```
-
-**DEPOIS** (API real):
-```typescript
-const params = useParams<{ org: string }>();
-const { conversations, isLoading, isError } = useConversations(params.org);
-```
-
-**Estados Adicionados**:
-1. **Loading State**:
-   - Spinner animado
-   - Texto "Carregando conversas..."
-
-2. **Error State**:
-   - Ícone ⚠️
-   - Mensagem de erro
-   - Botão "Recarregar página"
-
-3. **Success State**:
-   - Renderiza conversas normalmente
-   - Busca local ainda funciona (client-side)
-
-**Comportamento**:
-- Polling automático a cada 3s
-- Conversas atualizam em tempo real
-- Se Supabase cair → Error state
-- Se sem conversas → Lista vazia (sem erro)
-
----
-
-### Arquivos Criados
-
-```
-src/
-├── lib/
-│   └── utils/
-│       └── fetcher.ts              ← NOVO: Helper para requests HTTP
-├── hooks/
-│   └── use-conversations.ts        ← NOVO: Hook SWR para conversas
-└── app/
-    └── (dashboard)/
-        └── [org]/
-            └── inbox/
-                ├── types.ts        ← NOVO: Tipos UI + conversores
-                └── page.tsx        ← ATUALIZADO: Usa API real
-```
-
----
-
-### Arquivos Modificados
-
-#### `src/app/(dashboard)/[org]/inbox/page.tsx`
-**Linhas alteradas**: ~50
-**Principais mudanças**:
-- Removido `useState` para conversas
-- Adicionado `useParams` e `useConversations`
-- Adicionado loading/error states
-- Mantido `mockMessages` (será removido na 4.2)
-
----
-
-### Dependências Adicionadas
+### Dependências
 
 ```json
 {
@@ -289,7 +263,6 @@ src/
 - Polling automático built-in
 - Revalidação inteligente
 - Suficiente para MVP
-- Fácil migração para React Query depois (se necessário)
 
 ---
 
@@ -298,13 +271,16 @@ src/
 ### Fase 4.2: Buscar Mensagens Reais
 
 **Tarefas**:
-1. Criar `src/hooks/use-messages.ts`
-2. Adicionar `toUiMessage` em `types.ts`
-3. Atualizar `page.tsx` para usar `useMessages`
-4. Adicionar loading skeleton em `message-area.tsx`
+1. Criar `src/hooks/use-messages.ts` (similar ao `useConversations`)
+2. Atualizar `page.tsx` para usar `useMessages`
+3. Atualizar `message-bubble.tsx` para usar tipo `Message` do repository
+4. Adicionar loading state em `message-area.tsx`
 5. Testar carregamento de mensagens
 
-**Estimativa**: ~1-2h
+**Abordagem**:
+- Mesmo padrão do `useConversations`
+- Sem camada de conversão
+- Componentes usam `snake_case` diretamente
 
 ---
 
@@ -322,6 +298,7 @@ Quando toda a Fase 4 estiver concluída:
 - ✅ Polling automático (3s para conversas)
 - ✅ TypeScript sem erros/warnings
 - ✅ `mock-data.ts` deletado
+- ✅ Tipos usados diretamente do repository (KISS)
 
 ---
 
@@ -333,7 +310,6 @@ Quando toda a Fase 4 estiver concluída:
 - ✅ Simples de implementar
 - ✅ Funciona com qualquer backend
 - ✅ Suficiente para MVP
-- ✅ Usa 1 request/3s por cliente
 
 **Fase 6** (futura): Supabase Realtime (WebSocket)
 - Adicionar quando: >50 clientes ativos simultâneos
@@ -359,7 +335,6 @@ Todas as requests passam por:
 - Paginação (infinite scroll)
 - Virtual scrolling para 1000+ conversas
 - Realtime WebSocket
-- Service Worker para offline
 
 ---
 
@@ -386,6 +361,6 @@ Todas as requests passam por:
 
 ---
 
-**Última atualização**: 2026-01-21
+**Última atualização**: 2026-01-22
 **Responsável**: Claude Code
 **Próxima fase**: 4.2 - Buscar Mensagens Reais

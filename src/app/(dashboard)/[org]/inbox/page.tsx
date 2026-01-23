@@ -15,7 +15,7 @@ import { ConversationList } from './components/conversation-list';
 import { MessageArea } from './components/message-area';
 import { useConversations } from '@/hooks/use-conversations';
 import { mockMessages, type Message } from './mock-data';
-import type { UiConversation } from './types';
+import type { Conversation } from '@/lib/db/repositories/conversation';
 
 export default function InboxPage() {
   // Get org from URL params
@@ -31,7 +31,7 @@ export default function InboxPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Use API conversations or empty array
-  const conversations: UiConversation[] = apiConversations || [];
+  const conversations: Conversation[] = apiConversations || [];
 
   // Conversa selecionada
   const selectedConversation = conversations.find(
@@ -45,7 +45,7 @@ export default function InboxPage() {
 
   // Filtrar conversas pela busca
   const filteredConversations = conversations.filter((conv) =>
-    conv.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+    (conv.customer_name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Handler para enviar mensagem

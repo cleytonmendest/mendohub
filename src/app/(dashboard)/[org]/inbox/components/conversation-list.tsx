@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { Conversation } from '../mock-data';
+import type { Conversation } from '@/lib/db/repositories/conversation';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -30,7 +30,9 @@ export function ConversationList({
   onSearchChange,
 }: ConversationListProps) {
 
-  const formatTimestamp = (date: Date) => {
+  const formatTimestamp = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
     const now = new Date();
     const diffInMinutes = Math.floor(
       (now.getTime() - date.getTime()) / (1000 * 60)
@@ -87,9 +89,9 @@ export function ConversationList({
             >
               {/* Avatar */}
               <Avatar className="flex-shrink-0">
-                <AvatarImage src={conversation.customerProfilePicUrl || undefined} />
+                <AvatarImage src={conversation.customer_profile_pic_url || undefined} />
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {getInitials(conversation.customerName)}
+                  {getInitials(conversation.customer_name || 'Desconhecido')}
                 </AvatarFallback>
               </Avatar>
 
@@ -97,10 +99,10 @@ export function ConversationList({
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2 mb-1">
                   <h3 className="font-semibold text-sm truncate">
-                    {conversation.customerName}
+                    {conversation.customer_name || 'Desconhecido'}
                   </h3>
                   <span className="text-xs text-muted-foreground flex-shrink-0">
-                    {formatTimestamp(conversation.lastMessageAt)}
+                    {formatTimestamp(conversation.last_message_at)}
                   </span>
                 </div>
 
@@ -108,19 +110,19 @@ export function ConversationList({
                   <p
                     className={cn(
                       'text-sm truncate',
-                      conversation.unreadCount > 0
+                      (conversation.unread_count || 0) > 0
                         ? 'font-medium text-foreground'
                         : 'text-muted-foreground'
                     )}
                   >
-                    {conversation.lastMessageContent}
+                    {conversation.last_message_content}
                   </p>
-                  {conversation.unreadCount > 0 && (
+                  {(conversation.unread_count || 0) > 0 && (
                     <Badge
                       variant="default"
                       className="flex-shrink-0 h-5 min-w-5 flex items-center justify-center rounded-full px-1.5"
                     >
-                      {conversation.unreadCount}
+                      {conversation.unread_count}
                     </Badge>
                   )}
                 </div>

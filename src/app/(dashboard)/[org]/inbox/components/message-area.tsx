@@ -16,7 +16,8 @@ import { MessageInput } from './message-input';
 import { MessageBubble } from './message-bubble';
 import { ContactInfoPopover } from './contact-info-popover';
 import { ConversationOptionsMenu } from './conversation-options-menu';
-import type { Conversation, Message } from '../mock-data';
+import type { Conversation } from '@/lib/db/repositories/conversation';
+import type { Message } from '../mock-data';
 
 interface MessageAreaProps {
   conversation: Conversation | null;
@@ -64,18 +65,18 @@ export function MessageArea({ conversation, messages, onSendMessage }: MessageAr
         <div className="flex items-center gap-3">
           <Avatar>
             <AvatarImage
-              src={conversation.customerProfilePicUrl || undefined}
+              src={conversation.customer_profile_pic_url || undefined}
             />
             <AvatarFallback className="bg-primary/10 text-primary">
-              {getInitials(conversation.customerName)}
+              {getInitials(conversation.customer_name || 'Desconhecido')}
             </AvatarFallback>
           </Avatar>
           <div>
             <h2 className="font-semibold text-sm">
-              {conversation.customerName}
+              {conversation.customer_name || 'Desconhecido'}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {conversation.customerPhone}
+              {conversation.customer_phone}
             </p>
           </div>
         </div>
