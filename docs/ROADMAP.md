@@ -1,402 +1,263 @@
 # Roadmap - MendoHub
 
-Plano de desenvolvimento completo do MendoHub, dividido em fases incrementais.
+Plano de desenvolvimento do MendoHub, dividido em fases incrementais.
 
-**Versão**: 1.0  
-**Última atualização**: Janeiro 2025
+**Versão**: 2.0
+**Última atualização**: 2026-01-26
 
 ---
 
 ## 🎯 Visão Geral
 
 ### MVP (Minimum Viable Product)
-Objetivo: Validar produto com 3-5 clientes pagantes em 3 meses.
+**Objetivo**: Validar produto com 3-5 clientes pagantes em 3 meses.
 
-### Fases
-1. **Foundation** (4 semanas) - Setup + Auth + Admin
-2. **WhatsApp Core** (3 semanas) - Conexões + Mensagens + Workflows
-3. **Business** (2 semanas) - Billing + Analytics + Polish
-
-**Total MVP**: 9 semanas (~2 meses)
+**Status Atual**: 🚧 Em desenvolvimento
+**Progresso**: ~60% do MVP completo
 
 ---
 
-## 📅 FASE 1: Foundation (4 semanas)
+## ✅ O QUE JÁ ESTÁ PRONTO
 
-### Objetivos
-- ✅ Projeto configurado e deployável
-- ✅ Auth funcionando
-- ✅ Admin pode gerenciar clientes
-- ✅ Cliente pode fazer login
+### 1. Foundation & Infrastructure ✅
+- [x] Projeto Next.js 16.1 configurado
+- [x] TypeScript strict mode + ESLint + Prettier
+- [x] Tailwind CSS + shadcn/ui
+- [x] Supabase local (Docker)
+- [x] Migrations do banco (schema completo)
+- [x] RLS policies configuradas
+- [x] Types TypeScript gerados automaticamente
+- [x] Repository Pattern implementado
 
-### Semana 1: Setup & Infrastructure
+### 2. Database & Auth ✅
+- [x] Tabelas: plans, organizations, users, whatsapp_connections, conversations, messages, templates
+- [x] RLS multi-tenant (isolamento por organização)
+- [x] Supabase Auth configurado
+- [x] Seed data para desenvolvimento
 
-**Tarefas:**
-- [x] Setup projeto Next.js
-- [x] Configuração TypeScript/ESLint/Prettier
-- [x] Integração Tailwind + shadcn/ui
-- [x] Setup Supabase local
-- [ ] Criar migrations iniciais
-- [ ] Documentação completa
+### 3. Client Dashboard ✅
+- [x] Layout multi-tenant ([org] slug)
+- [x] Navegação sidebar
+- [x] Settings page
+  - [x] Dados da organização
+  - [x] Mensagens padrão (welcome_message)
+  - [x] Horário de atendimento (UI criada)
 
-**Entregáveis:**
-- Projeto roda localmente sem erros
-- README + docs completos
-- CI/CD básico (GitHub Actions)
+### 4. WhatsApp Connections ✅
+- [x] Embedded Signup (Meta SDK)
+- [x] API: POST /api/whatsapp/connect
+- [x] Criptografia de tokens (AES-256-CBC)
+- [x] Listar conexões ativas
+- [x] Página /connections
 
----
+### 5. Webhook & Message Processing ✅
+- [x] GET/POST /api/webhooks/whatsapp/global
+- [x] Verificação Meta (hub.verify_token)
+- [x] Message processor service
+- [x] Salvar mensagens no banco
+- [x] Criar/atualizar conversas automaticamente
+- [x] Idempotency (WAMID único)
 
-### Semana 2: Database & Auth
+### 6. Inbox Completo ✅
+- [x] Listar conversas (sidebar)
+- [x] Busca de conversas
+- [x] Ver mensagens de uma conversa
+- [x] Enviar mensagens de texto
+- [x] Status de mensagens (sent/delivered/read)
+- [x] Polling automático (3s)
+- [x] Loading states (skeletons)
+- [x] Error handling com toast notifications
+- [x] Empty states
 
-**Tarefas:**
-- [ ] Schema completo do banco
-  - [ ] Tabela `plans`
-  - [ ] Tabela `organizations`
-  - [ ] Tabela `users`
-  - [ ] Tabela `whatsapp_connections`
-  - [ ] Tabela `conversations`
-  - [ ] Tabela `messages`
-  - [ ] Tabela `templates`
-  - [ ] Tabela `workflows`
-  - [ ] Tabela `audit_logs`
-- [ ] RLS (Row Level Security) policies
-- [ ] Supabase Auth setup
-  - [ ] Email/Password
-  - [ ] Magic Link (opcional)
-- [ ] Seed data (planos)
-
-**Entregáveis:**
-- Banco funcionando com dados de teste
-- Auth flow completo
-- Types TypeScript gerados
-
----
-
-### Semana 3: Admin Dashboard
-
-**Tarefas:**
-- [ ] Layout admin
-  - [ ] Sidebar
-  - [ ] Header
-  - [ ] Navegação
-- [ ] Dashboard overview
-  - [ ] Cards de métricas (MRR, clientes, etc)
-  - [ ] Gráficos básicos
-- [ ] Gestão de clientes
-  - [ ] Listar orgs
-  - [ ] Criar org
-  - [ ] Editar org
-  - [ ] Suspender/cancelar org
-  - [ ] Impersonation (login como cliente)
-- [ ] Repository layer
-  - [ ] Interfaces
-  - [ ] Implementação Supabase
-
-**Entregáveis:**
-- Admin pode criar e gerenciar clientes
-- CRUD completo de organizations
+### 7. Automação Básica ✅
+- [x] **Saudação Automática** (primeira mensagem)
+  - Configurável em Settings
+  - Detecta primeira interação
+  - Envia welcome_message automaticamente
 
 ---
 
-### Semana 4: Client Dashboard Base
+## 🚧 EM DESENVOLVIMENTO
 
-**Tarefas:**
-- [ ] Layout cliente
-  - [ ] Sidebar multi-tenant ([org] slug)
-  - [ ] Header com org switcher
-  - [ ] Navegação
-- [ ] Dashboard overview
-  - [ ] Cards de métricas básicas
-- [ ] Settings
-  - [ ] Dados da org
-  - [ ] Horário de atendimento
-  - [ ] Mensagens padrão
-- [ ] Team management
-  - [ ] Listar membros
-  - [ ] Convidar membro
-  - [ ] Remover membro
+### Templates de Mensagens (1-2 dias)
+**Status**: Próximo
+**Impacto**: Atendimento 3x mais rápido
 
-**Entregáveis:**
-- Cliente pode fazer login
-- Ver dashboard básico
-- Convidar equipe
+- [ ] CRUD de templates
+- [ ] Variáveis dinâmicas ({{nome}}, {{produto}})
+- [ ] Botão "Templates" no inbox
+- [ ] Atalhos de teclado
+- [ ] Categorias de templates
+
+### FAQ Automático (2-3 dias)
+**Status**: Planejado
+**Impacto**: Reduz 40-60% mensagens manuais
+
+- [ ] Interface para cadastrar Q&A
+- [ ] Match de keywords simples
+- [ ] Auto-resposta quando encontrar match
+- [ ] Fallback para humano
 
 ---
 
-## 📅 FASE 2: WhatsApp Core (3 semanas)
+## 📋 BACKLOG (MVP)
 
-### Objetivos
-- ✅ Conectar números WhatsApp
-- ✅ Receber mensagens via webhook
-- ✅ Enviar mensagens
-- ✅ Bot responde automaticamente
+### Alta Prioridade
 
-### Semana 5: Conexões WhatsApp
+**Admin Dashboard**
+- [ ] Platform admin pages
+- [ ] Gestão de organizações (CRUD)
+- [ ] Impersonation
+- [ ] Métricas agregadas
 
-**Tarefas:**
-- [ ] Embedded Signup
-  - [ ] Página /connections/new
-  - [ ] Integração SDK Meta
-  - [ ] Callback handling
-- [ ] API route: POST /api/whatsapp/connect
-  - [ ] Trocar code por token
-  - [ ] Salvar connection no banco
-  - [ ] Criptografar token
-- [ ] Listar conexões
-  - [ ] Card com status
-  - [ ] Quality rating
-  - [ ] Últimas mensagens
-- [ ] Desconectar número
-- [ ] Testar conexão (send test message)
+**Analytics Básicas**
+- [ ] Total conversas no mês
+- [ ] Taxa de resposta
+- [ ] Tempo médio de primeira resposta
+- [ ] Bot vs humano (%)
 
-**Entregáveis:**
-- Cliente conecta WhatsApp em 2 cliques
-- Tokens salvos criptografados
-
----
-
-### Semana 6: Webhooks & Mensagens
-
-**Tarefas:**
-- [ ] Webhook handler
-  - [ ] GET /api/webhooks/whatsapp/[id] (verificação Meta)
-  - [ ] POST /api/webhooks/whatsapp/[id] (receber msgs)
-- [ ] Message processor
-  - [ ] Salvar mensagem no banco
-  - [ ] Criar/atualizar conversa
-  - [ ] Trigger workflows
-- [ ] WhatsApp API client
-  - [ ] Send text message
-  - [ ] Send template message
-  - [ ] Get message status
-- [ ] Inbox básico
-  - [ ] Listar conversas
-  - [ ] Ver mensagens
-  - [ ] Responder mensagem
-  - [ ] Status read/delivered
-
-**Entregáveis:**
-- Webhook recebe mensagens
-- Admin pode ver conversas no inbox
-- Pode responder manualmente
-
----
-
-### Semana 7: Workflows & Bot
-
-**Tarefas:**
-- [ ] Templates de mensagens
-  - [ ] CRUD templates
-  - [ ] Variáveis ({{nome}}, etc)
-  - [ ] Usar template no inbox
-- [ ] FAQ automático
-  - [ ] Interface simples (pergunta → resposta)
-  - [ ] Match keywords
-  - [ ] Enviar template correspondente
-- [ ] Saudação automática
-  - [ ] Detectar primeira mensagem
-  - [ ] Enviar welcome message
-- [ ] Mensagem fora do horário
-  - [ ] Verificar horário configurado
-  - [ ] Enviar mensagem automática
-- [ ] Integração Claude AI (básica)
-  - [ ] Se FAQ não match → chama Claude
-  - [ ] Claude gera resposta
-  - [ ] Envia resposta
-
-**Entregáveis:**
-- Bot responde FAQ automaticamente
-- Saudação automática funciona
-- Claude responde quando não tem FAQ
-
----
-
-## 📅 FASE 3: Business (2 semanas)
-
-### Objetivos
-- ✅ Billing configurado
-- ✅ Limites por plano
-- ✅ Analytics básicas
-- ✅ Polish e bugs
-
-### Semana 8: Billing & Limits
-
-**Tarefas:**
-- [ ] Usage tracking
-  - [ ] Contar conversas do mês
-  - [ ] Verificar limites
-  - [ ] Alertar quando próximo do limite
-- [ ] Planos
-  - [ ] Tabela `plans` seed
-  - [ ] Atribuir plano a org
-  - [ ] Upgrade/downgrade plano
+**Billing & Limits**
+- [ ] Usage tracking (conversas/mês)
+- [ ] Enforce limites por plano
+- [ ] Upgrade/downgrade flow
 - [ ] Billing page
-  - [ ] Ver plano atual
-  - [ ] Uso atual vs limite
-  - [ ] Histórico de uso
-  - [ ] (Futuro: integração Stripe)
-- [ ] Enforce limits
-  - [ ] Bloquear envio se exceder limite
-  - [ ] Mostrar mensagem de upgrade
 
-**Entregáveis:**
-- Limites por plano funcionando
-- Cliente vê uso atual
-- Admin vê billing de todos
+### Média Prioridade
 
----
+**Team Management**
+- [ ] Listar membros da org
+- [ ] Convidar usuários
+- [ ] Roles (admin, agent)
+- [ ] Atribuição de conversas
 
-### Semana 9: Analytics & Polish
+**Inbox Avançado**
+- [ ] Filtros (status, assigned)
+- [ ] Marcar como resolvido
+- [ ] Atribuir para usuário
+- [ ] Tags nas conversas
 
-**Tarefas:**
-- [ ] Analytics dashboard
-  - [ ] Total conversas (mês)
-  - [ ] Conversas por dia (gráfico)
-  - [ ] Taxa de resposta
-  - [ ] Tempo médio de resposta
-  - [ ] Bot vs humano (%)
-  - [ ] Top keywords FAQ
-- [ ] Logs & Auditoria
-  - [ ] Tabela `audit_logs`
-  - [ ] Log ações importantes
-  - [ ] Admin vê logs
-- [ ] Error handling
-  - [ ] Error boundaries
-  - [ ] Toast notifications
-  - [ ] Retry logic (webhook)
-- [ ] Polish UI
-  - [ ] Loading states
-  - [ ] Empty states
-  - [ ] Responsividade mobile
-  - [ ] Accessibility (aria-labels)
-- [ ] Performance
-  - [ ] Lazy loading
-  - [ ] Image optimization
-  - [ ] Bundle size
+**Mensagens Fora do Horário**
+- [ ] Validar business_hours
+- [ ] Enviar out_of_hours_message
+- [ ] Fila de mensagens
 
-**Entregáveis:**
-- Analytics mostrando métricas
-- UI polida e responsiva
-- Tratamento de erros robusto
+### Baixa Prioridade
+
+**Integração Claude AI**
+- [ ] Fallback quando FAQ não match
+- [ ] Context window da conversa
+- [ ] Prompt engineering
+- [ ] Toggle AI on/off
+
+**Workflows Visuais**
+- [ ] Interface drag-and-drop
+- [ ] Condicionais
+- [ ] Delays/Agendamento
+- [ ] Gatilhos customizados
 
 ---
 
-## 🚀 Pós-MVP: Features Futuras
+## 🚀 PÓS-MVP (Fase 2)
 
-### Fase 4: Integrações (3 semanas)
-
-- [ ] Shopify
-  - [ ] Recuperação de carrinho
-  - [ ] Status de pedido
-  - [ ] Buscar produtos
+### Integrações E-commerce
+- [ ] Shopify (recuperação carrinho, status pedido)
 - [ ] VTEX
-  - [ ] Similar ao Shopify
-- [ ] Google Sheets
-  - [ ] Salvar leads
-  - [ ] Log conversas
-- [ ] n8n Integration
-  - [ ] Webhook para n8n
-  - [ ] Triggers customizados
+- [ ] WooCommerce
+- [ ] Buscar produtos via WhatsApp
 
----
-
-### Fase 5: Advanced Features (4 semanas)
-
-- [ ] Inbox avançado
-  - [ ] Filtros e busca
-  - [ ] Atribuição automática
-  - [ ] Priorização
-  - [ ] Tags
-- [ ] Workflows visuais
-  - [ ] Interface drag-and-drop (tipo n8n)
-  - [ ] Condicionais
-  - [ ] Delay/Schedule
+### Features Avançadas
+- [ ] Multi-número (3+ números por org)
+- [ ] Mídia (imagens, áudios, documentos)
 - [ ] Templates aprovados Meta
-  - [ ] Submeter templates pra Meta
-  - [ ] Acompanhar aprovação
-  - [ ] Usar templates aprovados
-- [ ] Multi-número
-  - [ ] Suporte a 3+ números por org
-  - [ ] Roteamento por número
+- [ ] Inbox realtime (WebSocket)
+- [ ] Push notifications
 
----
-
-### Fase 6: Scale & Polish (2 semanas)
-
-- [ ] Testes automatizados
-  - [ ] Unit tests (utils, services)
-  - [ ] Integration tests (API routes)
-  - [ ] E2E tests (signup, inbox)
-- [ ] Performance
-  - [ ] Redis caching
-  - [ ] Rate limiting distribuído
-  - [ ] Queue para webhooks (Bull/BullMQ)
-- [ ] Monitoring
-  - [ ] Sentry (error tracking)
-  - [ ] Logs estruturados (Datadog/Logtail)
-  - [ ] Uptime monitoring
-- [ ] Documentation
-  - [ ] API docs (Swagger)
-  - [ ] User guide
-  - [ ] Video tutorials
+### Scale & Performance
+- [ ] Redis caching
+- [ ] Queue para webhooks (Bull/BullMQ)
+- [ ] Rate limiting distribuído
+- [ ] Testes automatizados (E2E)
+- [ ] Monitoring (Sentry, Datadog)
 
 ---
 
 ## 📊 Métricas de Sucesso
 
-### MVP (Fase 1-3)
-- **Técnicas:**
-  - ✅ Deploy em produção sem erros
-  - ✅ 99% uptime
-  - ✅ Webhook responde < 3s
-  - ✅ Zero bugs críticos
+### MVP
+- ✅ **Técnicas:**
+  - Deploy em produção funcionando
+  - Webhook responde < 3s
+  - TypeScript sem erros
+  - Zero bugs críticos
 
-- **Negócio:**
-  - ✅ 3-5 clientes beta usando
-  - ✅ 1-2 clientes pagantes
-  - ✅ Feedback positivo (NPS > 8)
-  - ✅ Validação do produto
+- 🎯 **Negócio:**
+  - 3-5 clientes beta testando
+  - 1-2 clientes pagantes
+  - Feedback positivo (NPS > 8)
+  - Validação do problema/solução
 
 ### Pós-MVP
 - **Técnicas:**
-  - ✅ Test coverage > 70%
-  - ✅ Lighthouse score > 90
-  - ✅ Bugs críticos < 2/mês
+  - Test coverage > 70%
+  - Lighthouse score > 90
+  - Uptime > 99.5%
 
 - **Negócio:**
-  - ✅ 10+ clientes pagantes
-  - ✅ MRR > R$5.000
-  - ✅ Churn < 10%
-  - ✅ NPS > 9
+  - 10+ clientes pagantes
+  - MRR > R$5.000
+  - Churn < 10%
+  - NPS > 9
 
 ---
 
-## 🎯 Próxima Ação Imediata
+## 🎯 Próximas Ações
 
-**AGORA (Semana 1):**
-1. ✅ Setup projeto (FEITO!)
-2. ✅ Criar migrations do banco
-3. ✅ Configurar Supabase Auth
-4. ✅ Primeira página funcional (login)
+**Agora (Esta Semana):**
+1. ✅ Saudação Automática (FEITO!)
+2. 🚧 Templates de Mensagens (2 dias)
+3. 🚧 FAQ Automático (3 dias)
 
-**Status**: ✅ Semana 1 iniciada!
+**Semana que vem:**
+4. Admin Dashboard básico
+5. Analytics simples
+6. Billing & limits
+
+**Objetivo 30 dias:**
+- MVP funcional completo
+- Deploy em produção
+- Primeiros beta testers
 
 ---
 
 ## 📝 Notas
 
-### Flexibilidade
-Este roadmap é vivo e será ajustado conforme:
-- Feedback de clientes beta
-- Dificuldades técnicas
-- Mudanças de prioridade
+### Decisões de Arquitetura
 
-### Decisões Pendentes
-- [ ] Decidir gateway de pagamento (Stripe vs Pagar.me)
-- [ ] Definir pricing exato dos planos
-- [ ] Escolher ferramenta de analytics (PostHog vs Mixpanel)
+**Seguidas:**
+- ✅ Repository Pattern (abstração do Supabase)
+- ✅ KISS (Keep It Simple, Stupid)
+- ✅ Pain-Driven Complexity
+- ✅ SWR (não React Query)
+- ✅ Polling (não WebSocket no MVP)
+
+**Pendentes:**
+- [ ] Gateway de pagamento (Stripe vs Pagar.me)
+- [ ] Pricing final dos planos
+- [ ] Analytics tool (PostHog vs Mixpanel)
+
+### Mudanças do Plano Original
+
+**Adicionado:**
+- Fase 4: Integração Frontend-Backend (não estava no plano)
+- Skeletons e loading states refinados
+- Saudação automática antes do FAQ
+
+**Removido/Adiado:**
+- Admin dashboard completo (adiado)
+- Team management (adiado)
+- Magic Link auth (desnecessário agora)
 
 ---
 
-**Próxima revisão**: Após completar Fase 1  
 **Responsável**: Cleyton Mendes
+**Próxima revisão**: Após completar Templates + FAQ

@@ -7,10 +7,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getWhatsAppConnectionRepository } from '@/lib/db/supabase/repositories/whatsapp_connection';
+import { getMessageProcessor } from '@/lib/services/whatsapp/message-processor';
 
 const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN || 'mendo_webhook_2025';
 
-function processMessages(messages: any[], connectionId: string) {
+async function processMessages(messages: any[], connectionId: string, organizationId: string) {
+  const processor = getMessageProcessor();
+
   for (const message of messages) {
     console.log('Mensagem recebida:', {
       connectionId,
@@ -19,10 +22,16 @@ function processMessages(messages: any[], connectionId: string) {
       id: message.id,
     });
 
-    // TODO (Semana 5-6): Processar mensagem
-    // - Salvar no banco
-    // - Criar/atualizar conversa
-    // - Acionar workflows
+    try {
+      await processor.processIncomingMessage({
+        message,
+        connectionId,
+        organizationId,
+      });
+    } catch (error) {
+      console.error('Erro ao processar mensagem:', error);
+      // Continuar processando outras mensagens
+    }
   }
 }
 
@@ -82,7 +91,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (change.value.messages) {
-          processMessages(change.value.messages, connection.id);
+          await processMessages(change.value.messages, connection.id, connection.organization_id);
         }
 
         if (change.value.statuses) {

@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageInput } from './message-input';
 import { MessageBubble } from './message-bubble';
+import { MessageListSkeleton } from './message-skeleton';
 import { ContactInfoPopover } from './contact-info-popover';
 import { ConversationOptionsMenu } from './conversation-options-menu';
 import type { Conversation } from '@/lib/db/repositories/conversation';
@@ -96,24 +97,7 @@ export function MessageArea({
       {/* Área de mensagens */}
       <ScrollArea className="flex-1 p-4">
         {isLoadingMessages ? (
-          // Loading state
-          <div className="space-y-4 max-w-4xl mx-auto">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className={`flex items-end gap-2 ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}
-              >
-                <div
-                  className={`max-w-[70%] rounded-lg px-4 py-3 ${
-                    i % 2 === 0 ? 'bg-primary/20' : 'bg-muted'
-                  } animate-pulse`}
-                >
-                  <div className="h-4 bg-current opacity-20 rounded w-48 mb-2" />
-                  <div className="h-3 bg-current opacity-10 rounded w-16" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <MessageListSkeleton />
         ) : messages.length === 0 ? (
           // Empty state
           <div className="flex items-center justify-center h-full text-muted-foreground">

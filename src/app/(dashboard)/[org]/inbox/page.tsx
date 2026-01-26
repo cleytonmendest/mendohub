@@ -11,7 +11,9 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { ConversationList } from './components/conversation-list';
+import { ConversationListSkeleton } from './components/conversation-skeleton';
 import { MessageArea } from './components/message-area';
 import { useConversations } from '@/hooks/use-conversations';
 import { useMessages } from '@/hooks/use-messages';
@@ -42,7 +44,7 @@ export default function InboxPage() {
   } = useMessages(orgId, selectedConversationId);
 
   // Hook para enviar mensagens
-  const { sendMessage } = useSendMessage();
+  const { sendMessage, error: sendError } = useSendMessage();
 
   // Use API data or empty arrays
   const conversations: Conversation[] = apiConversations || [];
@@ -75,16 +77,23 @@ export default function InboxPage() {
       return true;
     }
 
+    // Mostrar toast de erro
+    toast.error('Falha ao enviar mensagem', {
+      description: sendError?.message || 'Tente novamente mais tarde',
+    });
+
     return false;
   };
 
-  // Loading state
+  // Loading state - mostra skeleton da lista
   if (isLoadingConversations) {
     return (
-      <div className="flex h-[calc(100vh-7rem)] items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-          <p className="text-muted-foreground">Carregando conversas...</p>
+      <div className="flex h-[calc(100vh-7rem)]">
+        <div className="w-full md:w-96 border-r flex-shrink-0 p-4">
+          <ConversationListSkeleton count={8} />
+        </div>
+        <div className="flex-1 flex items-center justify-center bg-muted/20">
+          <p className="text-muted-foreground">Selecione uma conversa</p>
         </div>
       </div>
     );

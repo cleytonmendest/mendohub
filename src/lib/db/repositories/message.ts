@@ -53,4 +53,10 @@ export interface MessageRepository {
    * Atualiza mensagem de erro
    */
   updateError(id: string, errorMessage: string): Promise<Message>;
+
+  /**
+   * Conta número de mensagens em uma conversa
+   * Usado para detectar primeira mensagem (welcome)
+   */
+  countByConversation(conversationId: string): Promise<number>;
 }
